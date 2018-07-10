@@ -9,17 +9,28 @@ def get_features(labels):
     # Directory where mp3 are stored.
     audio_dir = "fma_small"
 
-    X = pd.DataFrame(dtype=np.float32)
+    default_path = os.path.join(audio_dir, '{:06d}'.format(2)[:3], '{:06d}'.format(2) + '.mp3')
+    def_features = load_track(default_path)
+    default_shape = def_features.shape
+
+    track_count = len(labels)
+    X = np.zeros((track_count,) + default_shape, dtype=np.float32)
+    y = np.zeros((track_count), dtype=np.float32) # label
+
+    # X = pd.DataFrame(dtype=np.float32)
+    # y = pd.DataFrame()
     track_paths = {}
     count = 0
-    for track_index in labels.index.tolist():
+    for track_index in labels.index.tolist()[(len(labels)//4):]:
         tid_str = '{:06d}'.format(track_index)
         path = os.path.join(audio_dir, tid_str[:3], tid_str + '.mp3')
-        X = X.append(pd.DataFrame(load_track(path)))
+        # X = X.append(pd.DataFrame(load_track(path).tolist()))
+        X[track_index] = load_track(path, default_shape)
         track_paths[track_index] = os.path.abspath(path)
         count += 1
-        if count%10==0:
+        if count%100==0:
             print(count)
+
     return (X, track_paths)
 
 def collect_data():
@@ -52,5 +63,8 @@ def collect_data():
 data = collect_data()
 
 # save data
-file = open('data/fma_dataset.pkl', "wb")
-pickle.dump(data, file)
+destination = 'data'
+file = open(destination, "wb")
+# pickle.dump(data, file)
+
+np.save(save_destination,data)
